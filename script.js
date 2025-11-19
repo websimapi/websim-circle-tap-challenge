@@ -192,10 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.connectionStatus.textContent = "Waiting for opponent...";
             
             // Generate URL for QR with 'id' parameter
-            const url = new URL(window.location.href);
-            url.search = '';
-            url.searchParams.set('id', id);
-            const joinUrl = url.toString();
+            const joinUrl = `https://websim.com/@api/circletap?id=${id}`;
 
             QRCode.toCanvas(elements.qrCanvas, joinUrl, { width: 200, margin: 1, color: { dark: "#000000", light: "#ffffff" } }, function (error) {
                 if (error) console.error('QR generation error:', error);
