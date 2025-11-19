@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             currentUser = await window.websim.getCurrentUser();
-            const id = await network.init(currentUser.username);
+            const id = await network.initPeerJS(currentUser.username);
             
             ui.showLobbyScreen();
             elements.qrCanvas.style.display = 'block';
@@ -307,11 +307,11 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.connectionStatus.textContent = "Connecting...";
             
             currentUser = await window.websim.getCurrentUser();
-            await network.init(currentUser.username + '_guest_' + Math.floor(Math.random()*1000));
+            await network.initPeerJS(currentUser.username + '_guest_' + Math.floor(Math.random()*1000));
             
             network.connectToPeer(peerId, { username: currentUser.username });
             
-            network.send({ type: 'HELLO', username: currentUser.username });
+            // network.send({ type: 'HELLO', username: currentUser.username });
         } catch (e) {
             console.error("Connection failed", e);
             alert("Connection failed");
@@ -667,15 +667,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Network Listeners for Challenge List
     network.on('onPeerList', (peers) => {
-        // Filter out myself
-        const otherPeers = Object.values(peers).filter(p => p.id !== room.clientId);
+        // Filter out myself and ensure objects have IDs
+        const peersList = Object.entries(peers).map(([id, data]) => ({ id, ...data }));
+        const otherPeers = peersList.filter(p => p.id !== room.clientId);
         ui.updatePlayerList(otherPeers);
     });
 
     function refreshPlayerList() {
         if (!room || !room.peers) return;
-        const peers = room.peers;
-        const otherPeers = Object.values(peers).filter(p => p.id !== room.clientId);
+        // Filter out myself and ensure objects have IDs
+        const peersList = Object.entries(room.peers).map(([id, data]) => ({ id, ...data }));
+        const otherPeers = peersList.filter(p => p.id !== room.clientId);
         ui.updatePlayerList(otherPeers);
     }
 
