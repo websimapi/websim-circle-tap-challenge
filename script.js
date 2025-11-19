@@ -676,7 +676,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }));
         
         const myId = room.clientId;
-        const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : peersArray;
+        // Filter out our own user strictly
+        const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : [];
         ui.updatePlayerList(otherPeers);
     });
 
@@ -687,7 +688,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 id
             }));
             const myId = room.clientId;
-            const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : peersArray;
+            const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : [];
             ui.updatePlayerList(otherPeers);
         }
     };
@@ -695,6 +696,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initial refresh and follow-up to ensure list is populated after connection
     refreshPlayerList();
     setTimeout(refreshPlayerList, 1000);
+    // Check every 5 seconds for new users
+    setInterval(refreshPlayerList, 5000);
 
     network.on('onChallenge', (inviteData) => {
         ui.addInvite(inviteData);
