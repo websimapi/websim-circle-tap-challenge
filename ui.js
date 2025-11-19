@@ -293,3 +293,53 @@ export class UIController {
         }
     }
 }
+
+export function getUIElements() {
+    return {
+        scoreDisplay: document.getElementById('score-display'),
+        scoreEl: document.getElementById('score'),
+        levelDisplay: document.getElementById('level-display'),
+        startMenu: document.getElementById('start-menu'),
+        gameOverMenu: document.getElementById('game-over-menu'),
+        finalScoreEl: document.getElementById('final-score'),
+        restartBtn: document.getElementById('restart-btn'),
+        homeBtn: document.getElementById('home-btn'),
+        difficultyBtns: document.querySelectorAll('.difficulty-btn'),
+        replayBtn: document.getElementById('replay-btn'),
+        replayContainer: document.getElementById('replay-container'),
+        closeReplayBtn: document.getElementById('close-replay-btn'),
+        submitScoreBtn: document.getElementById('submit-score-btn'),
+        leaderboardBtn: document.getElementById('leaderboard-btn'),
+        leaderboardView: document.getElementById('leaderboard-view'),
+        closeLeaderboardBtn: document.getElementById('close-leaderboard-btn'),
+        leaderboardList: document.getElementById('leaderboard-list'),
+        leaderboardDifficultyFilters: document.getElementById('leaderboard-difficulty-filters'),
+        leaderboardFilterBtns: document.querySelectorAll('.leaderboard-filter-btn'),
+        leaderboardPagination: document.getElementById('leaderboard-pagination'),
+        // Challenge Mode
+        challengeModeBtn: document.getElementById('challenge-mode-btn'),
+        challengeMenu: document.getElementById('challenge-menu'),
+        hostGameBtn: document.getElementById('host-game-btn'),
+        joinGameBtn: document.getElementById('join-game-btn'),
+        challengeBackBtn: document.getElementById('challenge-back-btn'),
+        lobbyScreen: document.getElementById('lobby-screen'),
+        qrCanvas: document.getElementById('qr-canvas'),
+        connectionStatus: document.getElementById('connection-status'),
+        cancelHostBtn: document.getElementById('cancel-host-btn'),
+        scannerScreen: document.getElementById('scanner-screen'),
+        scannerVideo: document.getElementById('scanner-video'),
+        cancelScanBtn: document.getElementById('cancel-scan-btn'),
+        challengeHud: document.getElementById('challenge-hud'),
+        opponentName: document.querySelector('.opponent-name'),
+        opponentLevel: document.querySelector('.opponent-level'),
+        levelDiffIndicator: document.querySelector('.level-diff-indicator'),
+        // New elements
+        playersList: document.getElementById('players-list'),
+        refreshPlayersBtn: document.getElementById('refresh-players-btn'),
+        invitesList: document.getElementById('invites-list'),
+        inviteBadge: document.getElementById('invite-badge'),
+        challengeTabs: document.querySelectorAll('.challenge-tab'),
+        challengeTabViews: document.querySelectorAll('.tab-view'),
+        challengeDiffBtns: document.querySelectorAll('.challenge-diff-btn')
+    };
+}
