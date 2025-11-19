@@ -47,11 +47,31 @@
 
             <div id="challenge-menu" class="hidden">
                 <h2>Challenge Mode</h2>
-                <p>Battle an opponent!</p>
-                <div class="challenge-options">
-                    <button id="host-game-btn" class="menu-btn">Host Game</button>
-                    <button id="join-game-btn" class="menu-btn">Scan to Join</button>
+                
+                <div class="challenge-tabs">
+                    <button class="challenge-tab active" data-tab="players">Players</button>
+                    <button class="challenge-tab" data-tab="invites">Invites <span id="invite-badge" class="badge hidden">0</span></button>
                 </div>
+
+                <div id="players-view" class="tab-view active">
+                    <div id="players-list" class="scroll-list">
+                        <!-- Player items will be injected here -->
+                        <div class="empty-state">Scanning for players...</div>
+                    </div>
+                </div>
+
+                <div id="invites-view" class="tab-view">
+                    <div id="invites-list" class="scroll-list">
+                        <!-- Invite items will be injected here -->
+                        <div class="empty-state">No pending invites</div>
+                    </div>
+                </div>
+
+                <div class="challenge-footer">
+                    <button id="host-game-btn" class="menu-btn small-btn">Legacy QR Host</button>
+                    <button id="join-game-btn" class="menu-btn small-btn">Legacy QR Scan</button>
+                </div>
+                
                 <button id="challenge-back-btn" class="menu-btn" style="margin-top: 10px; background-color: transparent; border: 1px solid var(--text-color);">Back</button>
             </div>
 

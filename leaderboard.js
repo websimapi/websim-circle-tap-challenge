@@ -1,4 +1,4 @@
-const room = new WebsimSocket();
+import { room } from './network.js'; // Use the shared room instance
 const OLD_COLLECTION_NAME = 'leaderboard_scores_v3';
 const NEW_COLLECTION_NAME = 'leaderboard_profiles_v2';
 const LOCAL_STORAGE_KEY = 'circleTapPendingScores';

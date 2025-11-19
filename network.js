@@ -1,5 +1,9 @@
 import { Peer } from 'peerjs';
 
+// Shared WebsimSocket instance
+export const room = new WebsimSocket();
+room.initialize(); // Start connection immediately
+
 export class NetworkManager {
     constructor() {
         this.peer = null;
@@ -8,11 +12,41 @@ export class NetworkManager {
         this.callbacks = {
             onConnect: () => {},
             onData: () => {},
-            onDisconnect: () => {}
+            onDisconnect: () => {},
+            onPeerList: () => {},
+            onChallenge: () => {}
+        };
+        
+        this.setupSignaling();
+    }
+
+    setupSignaling() {
+        // Listen for peer list updates
+        room.subscribePresence((peers) => {
+            // peers is an object { clientId: presenceData }
+            // room.peers is better for username/avatar info
+            this.callbacks.onPeerList(room.peers);
+        });
+
+        // Listen for signaling messages
+        room.onmessage = (event) => {
+            const data = event.data;
+            if (!data) return;
+
+            if (data.type === 'CHALLENGE_INVITE') {
+                if (data.targetId === room.clientId) {
+                    this.callbacks.onChallenge(data);
+                }
+            } else if (data.type === 'CHALLENGE_REJECT') {
+                if (data.targetId === room.clientId) {
+                    // Handle rejection (optional toast)
+                    console.log("Challenge rejected by", data.username);
+                }
+            }
         };
     }
 
-    async init(username) {
+    async initPeerJS(username) {
         if (this.peer) return this.myId;
 
         this.peer = new Peer();
@@ -32,6 +66,33 @@ export class NetworkManager {
                 console.error('PeerJS error:', err);
                 reject(err);
             });
+        });
+    }
+
+    // Send a challenge via WebsimSocket
+    async sendChallengeInvite(targetClientId) {
+        const currentUser = await window.websim.getCurrentUser();
+        
+        // Ensure PeerJS is ready so we have an ID to send
+        if (!this.peer) {
+            await this.initPeerJS(currentUser.username);
+        }
+
+        room.send({
+            type: 'CHALLENGE_INVITE',
+            targetId: targetClientId,
+            senderId: room.clientId,
+            peerId: this.myId,
+            username: currentUser.username,
+            avatarUrl: currentUser.avatar_url
+        });
+    }
+
+    rejectChallenge(senderId) {
+         room.send({
+            type: 'CHALLENGE_REJECT',
+            targetId: senderId,
+            senderId: room.clientId
         });
     }
 
@@ -77,10 +138,12 @@ export class NetworkManager {
     }
 
     close() {
-        if (this.conn) this.conn.close();
-        if (this.peer) this.peer.destroy();
-        this.peer = null;
-        this.conn = null;
+        if (this.conn) {
+            this.conn.close();
+            this.conn = null;
+        }
+        // We generally don't want to destroy the peer instance unless we are fully quitting
+        // so we can receive future challenges.
     }
 
     on(event, callback) {
@@ -91,3 +154,5 @@ export class NetworkManager {
 }
 
 export const network = new NetworkManager();
+
+export async function migrateUserScores() { ... }

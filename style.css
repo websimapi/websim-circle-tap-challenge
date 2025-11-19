@@ -531,18 +531,140 @@ button:active {
 
 /* Challenge Mode Styles */
 #challenge-menu, #lobby-screen, #scanner-screen {
-    background-color: rgba(22, 33, 62, 0.95);
+    background-color: rgba(22, 33, 62, 0.98);
     padding: 20px;
     border-radius: 12px;
     pointer-events: all;
-    max-width: 90%;
+    max-width: 95%;
+    width: 340px;
     z-index: 2;
     position: absolute;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+}
+
+/* Tabs */
+.challenge-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.challenge-tab {
+    background: transparent;
+    border: none;
+    color: #aaa;
+    padding: 8px 12px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    position: relative;
+}
+
+.challenge-tab.active {
+    color: var(--text-color);
+    font-weight: bold;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.badge {
+    background-color: var(--accent-color);
+    color: white;
+    border-radius: 50%;
+    padding: 2px 6px;
+    font-size: 0.7rem;
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translate(50%, -30%);
+}
+
+.tab-view {
+    display: none;
+    flex-grow: 1;
+    min-height: 200px;
+}
+
+.tab-view.active {
+    display: block;
+}
+
+.scroll-list {
+    max-height: 250px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 8px;
+}
+
+.empty-state {
+    text-align: center;
+    color: #666;
+    padding: 20px 0;
+    font-style: italic;
+}
+
+.player-item, .invite-item {
+    display: flex;
     align-items: center;
-    gap: 15px;
-    width: 300px;
+    gap: 10px;
+    padding: 8px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 6px;
+}
+
+.player-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #333;
+}
+
+.player-info {
+    flex-grow: 1;
+    overflow: hidden;
+}
+
+.player-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.challenge-action-btn {
+    background-color: var(--secondary-color);
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    min-width: auto;
+}
+
+.accept-btn {
+    background-color: var(--success-color);
+}
+
+.reject-btn {
+    background-color: var(--fail-color);
+    margin-left: 4px;
+}
+
+.challenge-footer {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 10px;
+}
+
+.small-btn {
+    font-size: 0.75rem;
+    padding: 8px;
 }
 
 #qr-container {

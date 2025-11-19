@@ -5,6 +5,104 @@ export class UIController {
         this.gameOverButtonTimeout = null;
         // Bind methods
         this.updateLives = this.updateLives.bind(this);
+        
+        this.invites = []; // Store invites here
+    }
+
+    updatePlayerList(peers) {
+        const list = this.elements.playersList;
+        // Filter out self? room.clientId
+        // We can't access room here easily unless we import, but let's assume passed data is filtered or we handle it.
+        // Actually, pass currentClientId to this method or filtered list.
+        
+        list.innerHTML = '';
+        
+        if (!peers || peers.length === 0) {
+            list.innerHTML = '<div class="empty-state">No other players online</div>';
+            return;
+        }
+
+        peers.forEach(peer => {
+            const div = document.createElement('div');
+            div.className = 'player-item';
+            div.innerHTML = `
+                <img class="player-avatar" src="${peer.avatarUrl || 'https://via.placeholder.com/32'}" alt="${peer.username}">
+                <div class="player-info">
+                    <div class="player-name">${peer.username}</div>
+                </div>
+                <button class="challenge-action-btn challenge-player-btn" data-id="${peer.id}">Challenge</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    addInvite(invite) {
+        // Check if already exists
+        if (this.invites.some(i => i.senderId === invite.senderId)) return;
+        
+        this.invites.push(invite);
+        this.updateInviteBadge();
+        this.renderInvites();
+    }
+
+    removeInvite(senderId) {
+        this.invites = this.invites.filter(i => i.senderId !== senderId);
+        this.updateInviteBadge();
+        this.renderInvites();
+    }
+
+    updateInviteBadge() {
+        const badge = this.elements.inviteBadge;
+        const count = this.invites.length;
+        badge.textContent = count;
+        if (count > 0) {
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    renderInvites() {
+        const list = this.elements.invitesList;
+        list.innerHTML = '';
+
+        if (this.invites.length === 0) {
+            list.innerHTML = '<div class="empty-state">No pending invites</div>';
+            return;
+        }
+
+        this.invites.forEach(invite => {
+            const div = document.createElement('div');
+            div.className = 'invite-item';
+            div.innerHTML = `
+                <img class="player-avatar" src="${invite.avatarUrl || 'https://via.placeholder.com/32'}" alt="${invite.username}">
+                <div class="player-info">
+                    <div class="player-name">${invite.username}</div>
+                    <div style="font-size: 0.7rem; color: #aaa;">wants to play</div>
+                </div>
+                <button class="challenge-action-btn accept-btn" data-id="${invite.senderId}" data-peer="${invite.peerId}">Accept</button>
+                <button class="challenge-action-btn reject-btn" data-id="${invite.senderId}">&times;</button>
+            `;
+            list.appendChild(div);
+        });
+    }
+    
+    switchChallengeTab(tabName) {
+        this.elements.challengeTabs.forEach(btn => {
+            if (btn.dataset.tab === tabName) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        this.elements.challengeTabViews.forEach(view => {
+            if (view.id === `${tabName}-view`) {
+                view.classList.add('active');
+            } else {
+                view.classList.remove('active');
+            }
+        });
     }
 
     showStartMenu() {

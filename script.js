@@ -3,7 +3,7 @@ import { UIController } from './ui.js';
 import { submitScore, fetchLeaderboard, renderLeaderboardList, renderLeaderboardPagination, syncScores, migrateUserScores } from './leaderboard.js';
 import { showReplay, hideReplay } from './replay.js';
 import { playBackgroundMusic, fadeInMusic, fadeOutMusic } from './audio.js';
-import { network } from './network.js';
+import { network, room } from './network.js'; // Import room
 import QRCode from 'qrcode';
 import jsQR from 'jsqr';
 
@@ -56,7 +56,13 @@ document.addEventListener('DOMContentLoaded', () => {
         challengeHud: document.getElementById('challenge-hud'),
         opponentName: document.querySelector('.opponent-name'),
         opponentLevel: document.querySelector('.opponent-level'),
-        levelDiffIndicator: document.querySelector('.level-diff-indicator')
+        levelDiffIndicator: document.querySelector('.level-diff-indicator'),
+        // New elements
+        playersList: document.getElementById('players-list'),
+        invitesList: document.getElementById('invites-list'),
+        inviteBadge: document.getElementById('invite-badge'),
+        challengeTabs: document.querySelectorAll('.challenge-tab'),
+        challengeTabViews: document.querySelectorAll('.tab-view')
     };
 
     const game = new Game(canvas);
@@ -657,6 +663,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Window resize
     window.addEventListener('resize', () => game.resizeCanvas());
+
+    // Network Listeners for Challenge List
+    network.on('onPeerList', (peers) => {
+        // Filter out myself
+        const otherPeers = Object.values(peers).filter(p => p.id !== room.clientId);
+        ui.updatePlayerList(otherPeers);
+    });
+
+    network.on('onChallenge', (inviteData) => {
+        ui.addInvite(inviteData);
+    });
+
+    // Challenge Mode Tabs
+    elements.challengeTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            ui.switchChallengeTab(tab.dataset.tab);
+        });
+    });
+
+    // Player List Delegate
+    elements.playersList.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('challenge-player-btn')) {
+            const targetId = e.target.dataset.id;
+            const btn = e.target;
+            
+            const originalText = btn.textContent;
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+
+            try {
+                // Initialize PeerJS if needed
+                if (!currentUser) currentUser = await window.websim.getCurrentUser();
+                await network.initPeerJS(currentUser.username);
+
+                await network.sendChallengeInvite(targetId);
+                btn.textContent = 'Sent!';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            } catch (err) {
+                console.error("Failed to challenge:", err);
+                btn.textContent = 'Error';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
+                }, 2000);
+            }
+        }
+    });
+
+    // Invites List Delegate
+    elements.invitesList.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('accept-btn')) {
+            const peerId = e.target.dataset.peer;
+            const senderId = e.target.dataset.id;
+            
+            ui.removeInvite(senderId); // Remove from list
+
+            // Connect
+            connectToHost(peerId);
+            
+        } else if (e.target.classList.contains('reject-btn')) {
+            const senderId = e.target.dataset.id;
+            network.rejectChallenge(senderId);
+            ui.removeInvite(senderId);
+        }
+    });
 
     // Initial setup
     game.reset();
