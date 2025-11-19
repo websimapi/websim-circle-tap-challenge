@@ -47,6 +47,7 @@ export async function migrateUserScores() {
             let unsub;
             unsub = room.collection(OLD_COLLECTION_NAME).filter({ username: currentUser.username }).subscribe(records => {
                 if (unsub) unsub();
+                else setTimeout(() => unsub && unsub(), 0);
                 resolve(records);
             });
         });
@@ -64,6 +65,7 @@ export async function migrateUserScores() {
             let unsub;
             unsub = profileCollection.filter({ username: currentUser.username }).subscribe(records => {
                 if (unsub) unsub();
+                else setTimeout(() => unsub && unsub(), 0);
                 resolve(records);
             });
         });
@@ -164,6 +166,7 @@ export async function submitScore(lastGameData, onSuccess, onError) {
             let unsub;
             unsub = profileCollection.filter({ username: currentUser.username }).subscribe(records => {
                 if (unsub) unsub();
+                else setTimeout(() => unsub && unsub(), 0);
                 resolve(records);
             });
         });
@@ -240,6 +243,7 @@ export async function fetchLeaderboard(difficulty) {
         let unsub;
         unsub = room.collection(OLD_COLLECTION_NAME).filter({ difficulty }).subscribe(records => {
             if (unsub) unsub();
+            else setTimeout(() => unsub && unsub(), 0);
             resolve(records);
         });
     });
@@ -248,6 +252,7 @@ export async function fetchLeaderboard(difficulty) {
         let unsub;
         unsub = room.collection(NEW_COLLECTION_NAME).subscribe(records => {
             if (unsub) unsub();
+            else setTimeout(() => unsub && unsub(), 0);
             resolve(records);
         });
     });

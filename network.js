@@ -154,5 +154,3 @@ export class NetworkManager {
 }
 
 export const network = new NetworkManager();
-
-export async function migrateUserScores() { ... }
