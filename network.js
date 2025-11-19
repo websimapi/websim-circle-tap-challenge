@@ -2,7 +2,34 @@ import { Peer } from 'peerjs';
 
 // Shared WebsimSocket instance
 export const room = new WebsimSocket();
-room.initialize(); // Start connection immediately
+// room.initialize(); // Start connection immediately
+
+// Initialize room and announce our presence so others can see us in realtime
+(async () => {
+    try {
+        await room.initialize();
+
+        if (window.websim && typeof window.websim.getCurrentUser === 'function') {
+            const currentUser = await window.websim.getCurrentUser();
+            if (currentUser) {
+                room.updatePresence({
+                    username: currentUser.username,
+                    avatarUrl: currentUser.avatar_url,
+                    online: true,
+                    lastSeen: Date.now(),
+                });
+            }
+        } else {
+            // Fallback presence if websim user info is unavailable
+            room.updatePresence({
+                online: true,
+                lastSeen: Date.now(),
+            });
+        }
+    } catch (err) {
+        console.error('Error initializing realtime room/presence:', err);
+    }
+})();
 
 export class NetworkManager {
     constructor() {
