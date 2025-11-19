@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', () => {
         levelDiffIndicator: document.querySelector('.level-diff-indicator'),
         // New elements
         playersList: document.getElementById('players-list'),
+        refreshPlayersBtn: document.getElementById('refresh-players-btn'),
         invitesList: document.getElementById('invites-list'),
         inviteBadge: document.getElementById('invite-badge'),
         challengeTabs: document.querySelectorAll('.challenge-tab'),
@@ -177,7 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.challengeModeBtn.addEventListener('click', () => {
         handleFirstInteraction();
         ui.showChallengeMenu();
-        refreshPlayerList();
     });
 
     elements.challengeBackBtn.addEventListener('click', () => {
@@ -666,38 +666,41 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', () => game.resizeCanvas());
 
     // Network Listeners for Challenge List
-    network.on('onPeerList', (peersMap) => {
-        if (!peersMap) return;
-
-        // Parse peers map to array and ensure ID is attached
-        const peersArray = Object.entries(peersMap).map(([id, peer]) => ({
-            ...peer,
-            id
-        }));
-        
-        const myId = room.clientId;
-        // Filter out our own user strictly
-        const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : [];
+    network.on('onPeerList', (peers) => {
+        // Filter out myself
+        const otherPeers = Object.values(peers).filter(p => p.id !== room.clientId);
         ui.updatePlayerList(otherPeers);
     });
 
-    const refreshPlayerList = () => {
-        if (room.peers) {
-            const peersArray = Object.entries(room.peers).map(([id, peer]) => ({
-                ...peer,
-                id
-            }));
-            const myId = room.clientId;
-            const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : [];
-            ui.updatePlayerList(otherPeers);
-        }
-    };
+    function refreshPlayerList() {
+        if (!room || !room.peers) return;
+        const peers = room.peers;
+        const otherPeers = Object.values(peers).filter(p => p.id !== room.clientId);
+        ui.updatePlayerList(otherPeers);
+    }
 
-    // Initial refresh and follow-up to ensure list is populated after connection
-    refreshPlayerList();
-    setTimeout(refreshPlayerList, 1000);
-    // Check every 5 seconds for new users
-    setInterval(refreshPlayerList, 5000);
+    if (elements.refreshPlayersBtn) {
+        elements.refreshPlayersBtn.addEventListener('click', (e) => {
+            const btn = e.target;
+            const originalText = btn.textContent;
+            btn.textContent = '...';
+            btn.disabled = true;
+            refreshPlayerList();
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.disabled = false;
+            }, 500);
+        });
+    }
+
+    // Auto refresh interval
+    setInterval(() => {
+        const playersView = document.getElementById('players-view');
+        if (!elements.challengeMenu.classList.contains('hidden') && 
+            playersView && playersView.classList.contains('active')) {
+             refreshPlayerList();
+        }
+    }, 4000);
 
     network.on('onChallenge', (inviteData) => {
         ui.addInvite(inviteData);

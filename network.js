@@ -2,46 +2,7 @@ import { Peer } from 'peerjs';
 
 // Shared WebsimSocket instance
 export const room = new WebsimSocket();
-// room.initialize(); // Start connection immediately
-
-// Initialize room and announce our presence so others can see us in realtime
-(async () => {
-    try {
-        await room.initialize();
-
-        if (window.websim && typeof window.websim.getCurrentUser === 'function') {
-            const currentUser = await window.websim.getCurrentUser();
-            if (currentUser) {
-                room.updatePresence({
-                    username: currentUser.username,
-                    avatarUrl: currentUser.avatar_url,
-                    online: true,
-                    lastSeen: Date.now(),
-                });
-            }
-        } else {
-            // Fallback presence if websim user info is unavailable
-            room.updatePresence({
-                online: true,
-                lastSeen: Date.now(),
-            });
-        }
-
-        // After initialization and presence announcement, emit an initial peer list
-        if (window.__circleTapNetwork && typeof window.__circleTapNetwork.handlePeerUpdate === 'function') {
-            window.__circleTapNetwork.handlePeerUpdate();
-        }
-
-        // Heartbeat: ensure peer lists stay fresh even if a presence event is missed
-        setInterval(() => {
-            if (window.__circleTapNetwork && typeof window.__circleTapNetwork.handlePeerUpdate === 'function') {
-                window.__circleTapNetwork.handlePeerUpdate();
-            }
-        }, 5000);
-    } catch (err) {
-        console.error('Error initializing realtime room/presence:', err);
-    }
-})();
+room.initialize(); // Start connection immediately
 
 export class NetworkManager {
     constructor() {
@@ -59,33 +20,16 @@ export class NetworkManager {
         this.setupSignaling();
     }
 
-    // Emit the current peer map to listeners
-    handlePeerUpdate() {
-        if (!this.callbacks.onPeerList) return;
-        const peersMap = room.peers || {};
-        this.callbacks.onPeerList(peersMap);
-    }
-
     setupSignaling() {
-        // Listen for peer list / presence updates
-        room.subscribePresence((currentPresence) => {
-            // currentPresence: { clientId: presenceData }
-            // room.peers contains richer info (username, avatar)
-            console.log("Presence updated. Peers count:", Object.keys(room.peers || {}).length);
-            this.handlePeerUpdate();
+        // Listen for peer list updates
+        room.subscribePresence((peers) => {
+            // peers is an object { clientId: presenceData }
+            // room.peers is better for username/avatar info
+            this.callbacks.onPeerList(room.peers);
         });
 
-        // Chain any existing onmessage handler to avoid clobbering
-        const previousOnMessage = room.onmessage;
+        // Listen for signaling messages
         room.onmessage = (event) => {
-            if (typeof previousOnMessage === 'function') {
-                try {
-                    previousOnMessage(event);
-                } catch (e) {
-                    console.error('Error in previous room.onmessage handler:', e);
-                }
-            }
-
             const data = event.data;
             if (!data) return;
 
@@ -210,5 +154,3 @@ export class NetworkManager {
 }
 
 export const network = new NetworkManager();
-// Expose the singleton so the initializer can trigger updates after room.initialize()
-window.__circleTapNetwork = network;
