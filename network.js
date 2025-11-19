@@ -26,6 +26,7 @@ export class NetworkManager {
             // peers is an object { clientId: presenceData }
             // room.peers is better for username/avatar info
             if (this.callbacks.onPeerList) {
+                console.log("Peer list updated. Count:", Object.keys(room.peers || {}).length);
                 this.callbacks.onPeerList(room.peers);
             }
         });

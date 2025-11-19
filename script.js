@@ -666,16 +666,28 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', () => game.resizeCanvas());
 
     // Network Listeners for Challenge List
-    network.on('onPeerList', (peers) => {
-        // Filter out myself
-        if (!room.clientId || !peers) return;
-        const otherPeers = Object.values(peers).filter(p => p.id !== room.clientId);
+    network.on('onPeerList', (peersMap) => {
+        if (!peersMap) return;
+
+        // Parse peers map to array and ensure ID is attached
+        const peersArray = Object.entries(peersMap).map(([id, peer]) => ({
+            ...peer,
+            id
+        }));
+        
+        const myId = room.clientId;
+        const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : peersArray;
         ui.updatePlayerList(otherPeers);
     });
 
     const refreshPlayerList = () => {
-        if (room.peers && room.clientId) {
-            const otherPeers = Object.values(room.peers).filter(p => p.id !== room.clientId);
+        if (room.peers) {
+            const peersArray = Object.entries(room.peers).map(([id, peer]) => ({
+                ...peer,
+                id
+            }));
+            const myId = room.clientId;
+            const otherPeers = myId ? peersArray.filter(p => p.id !== myId) : peersArray;
             ui.updatePlayerList(otherPeers);
         }
     };
