@@ -25,7 +25,9 @@ export class NetworkManager {
         room.subscribePresence((peers) => {
             // peers is an object { clientId: presenceData }
             // room.peers is better for username/avatar info
-            this.callbacks.onPeerList(room.peers);
+            if (this.callbacks.onPeerList) {
+                this.callbacks.onPeerList(room.peers);
+            }
         });
 
         // Listen for signaling messages

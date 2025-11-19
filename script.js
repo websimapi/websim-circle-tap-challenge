@@ -177,6 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.challengeModeBtn.addEventListener('click', () => {
         handleFirstInteraction();
         ui.showChallengeMenu();
+        refreshPlayerList();
     });
 
     elements.challengeBackBtn.addEventListener('click', () => {
@@ -667,9 +668,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Network Listeners for Challenge List
     network.on('onPeerList', (peers) => {
         // Filter out myself
+        if (!room.clientId || !peers) return;
         const otherPeers = Object.values(peers).filter(p => p.id !== room.clientId);
         ui.updatePlayerList(otherPeers);
     });
+
+    const refreshPlayerList = () => {
+        if (room.peers && room.clientId) {
+            const otherPeers = Object.values(room.peers).filter(p => p.id !== room.clientId);
+            ui.updatePlayerList(otherPeers);
+        }
+    };
+
+    // Initial refresh and follow-up to ensure list is populated after connection
+    refreshPlayerList();
+    setTimeout(refreshPlayerList, 1000);
 
     network.on('onChallenge', (inviteData) => {
         ui.addInvite(inviteData);
