@@ -13,7 +13,7 @@ export class NetworkManager {
     }
 
     async init(username) {
-        if (this.peer) return; // Already init
+        if (this.peer) return this.myId;
 
         this.peer = new Peer();
 

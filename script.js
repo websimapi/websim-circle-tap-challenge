@@ -178,26 +178,36 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     elements.hostGameBtn.addEventListener('click', async () => {
+        const btn = elements.hostGameBtn;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Initializing...";
+
         try {
             currentUser = await window.websim.getCurrentUser();
             const id = await network.init(currentUser.username);
             
             ui.showLobbyScreen();
+            elements.qrCanvas.style.display = 'block';
             elements.connectionStatus.textContent = "Waiting for opponent...";
             
-            // Generate URL for QR
-            // Remove existing query params to avoid stacking
+            // Generate URL for QR with 'id' parameter
             const url = new URL(window.location.href);
-            url.searchParams.set('join', id);
+            url.search = '';
+            url.searchParams.set('id', id);
             const joinUrl = url.toString();
 
-            QRCode.toCanvas(elements.qrCanvas, joinUrl, { width: 200 }, function (error) {
-                if (error) console.error(error);
+            QRCode.toCanvas(elements.qrCanvas, joinUrl, { width: 200, margin: 1, color: { dark: "#000000", light: "#ffffff" } }, function (error) {
+                if (error) console.error('QR generation error:', error);
             });
 
         } catch (e) {
             console.error("Failed to init host:", e);
-            alert("Could not start host.");
+            alert("Could not start host connection. Please refresh and try again.");
+            ui.showChallengeMenu();
+        } finally {
+            btn.disabled = false;
+            btn.textContent = originalText;
         }
     });
 
@@ -261,24 +271,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log("Found QR code", code.data);
                 // Parse URL
                 try {
-                    // Handle the specific URL format from the prompt if needed, or generic
-                    // Prompt: https://websim.com/@api/circletap?id=...
-                    // My implementation: ?join=...
-                    
                     let joinId = null;
                     // Check for explicit id param first (from prompt spec)
                     if (code.data.includes('?id=')) {
                          const url = new URL(code.data);
                          joinId = url.searchParams.get('id');
                     } 
-                    // Check for my join param
+                    // Check for old join param just in case
                     else if (code.data.includes('?join=')) {
                          const url = new URL(code.data);
                          joinId = url.searchParams.get('join');
-                    }
-                    // Raw ID?
-                    else {
-                        // If it's just an alphanumeric string, maybe? unlikely.
                     }
 
                     if (joinId) {
@@ -315,7 +317,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Check for URL params on load
     const urlParams = new URLSearchParams(window.location.search);
-    const joinId = urlParams.get('join') || urlParams.get('id');
+    const joinId = urlParams.get('id') || urlParams.get('join');
     if (joinId) {
         // Auto join
         // Need to wait for user interaction? "handleFirstInteraction"
