@@ -26,6 +26,18 @@ export const room = new WebsimSocket();
                 lastSeen: Date.now(),
             });
         }
+
+        // After initialization and presence announcement, emit an initial peer list
+        if (window.__circleTapNetwork && typeof window.__circleTapNetwork.handlePeerUpdate === 'function') {
+            window.__circleTapNetwork.handlePeerUpdate();
+        }
+
+        // Heartbeat: ensure peer lists stay fresh even if a presence event is missed
+        setInterval(() => {
+            if (window.__circleTapNetwork && typeof window.__circleTapNetwork.handlePeerUpdate === 'function') {
+                window.__circleTapNetwork.handlePeerUpdate();
+            }
+        }, 5000);
     } catch (err) {
         console.error('Error initializing realtime room/presence:', err);
     }
@@ -47,19 +59,33 @@ export class NetworkManager {
         this.setupSignaling();
     }
 
+    // Emit the current peer map to listeners
+    handlePeerUpdate() {
+        if (!this.callbacks.onPeerList) return;
+        const peersMap = room.peers || {};
+        this.callbacks.onPeerList(peersMap);
+    }
+
     setupSignaling() {
-        // Listen for peer list updates
-        room.subscribePresence((peers) => {
-            // peers is an object { clientId: presenceData }
-            // room.peers is better for username/avatar info
-            if (this.callbacks.onPeerList) {
-                console.log("Peer list updated. Count:", Object.keys(room.peers || {}).length);
-                this.callbacks.onPeerList(room.peers);
-            }
+        // Listen for peer list / presence updates
+        room.subscribePresence((currentPresence) => {
+            // currentPresence: { clientId: presenceData }
+            // room.peers contains richer info (username, avatar)
+            console.log("Presence updated. Peers count:", Object.keys(room.peers || {}).length);
+            this.handlePeerUpdate();
         });
 
-        // Listen for signaling messages
+        // Chain any existing onmessage handler to avoid clobbering
+        const previousOnMessage = room.onmessage;
         room.onmessage = (event) => {
+            if (typeof previousOnMessage === 'function') {
+                try {
+                    previousOnMessage(event);
+                } catch (e) {
+                    console.error('Error in previous room.onmessage handler:', e);
+                }
+            }
+
             const data = event.data;
             if (!data) return;
 
@@ -184,3 +210,5 @@ export class NetworkManager {
 }
 
 export const network = new NetworkManager();
+// Expose the singleton so the initializer can trigger updates after room.initialize()
+window.__circleTapNetwork = network;
