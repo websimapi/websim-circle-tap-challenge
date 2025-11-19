@@ -553,6 +553,48 @@ button:active {
     border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
+.challenge-settings {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.challenge-settings label {
+    font-size: 0.8rem;
+    color: #aaa;
+}
+
+.challenge-difficulty-options {
+    display: flex;
+    gap: 5px;
+}
+
+.challenge-diff-btn {
+    flex: 1;
+    padding: 8px;
+    font-size: 0.85rem;
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.challenge-diff-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.challenge-diff-btn.active {
+    background-color: var(--secondary-color);
+    color: white;
+    border-color: var(--accent-color);
+    font-weight: bold;
+}
+
 .challenge-tab {
     background: transparent;
     border: none;

@@ -63,7 +63,8 @@ document.addEventListener('DOMContentLoaded', () => {
         invitesList: document.getElementById('invites-list'),
         inviteBadge: document.getElementById('invite-badge'),
         challengeTabs: document.querySelectorAll('.challenge-tab'),
-        challengeTabViews: document.querySelectorAll('.tab-view')
+        challengeTabViews: document.querySelectorAll('.tab-view'),
+        challengeDiffBtns: document.querySelectorAll('.challenge-diff-btn')
     };
 
     const game = new Game(canvas);
@@ -76,6 +77,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let isMyScoresActive = false;
     let currentUser = null;
     let replayOrigin = 'gameover';
+    let challengeDifficulty = 'medium';
+    let isHost = false;
     let leaderboardState = {
         currentPage: 1,
         totalPages: 1,
@@ -121,6 +124,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Challenge Difficulty Selection
+    elements.challengeDiffBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            elements.challengeDiffBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            challengeDifficulty = btn.dataset.difficulty;
+        });
+    });
+
     // Network Callbacks
     network.on('onConnect', (metadata) => {
         console.log("Connected to peer!");
@@ -130,16 +142,17 @@ document.addEventListener('DOMContentLoaded', () => {
         stopScanner();
         
         // If we are host, send Start game soon
-        // Actually, let's wait 1s then start
-        setTimeout(() => {
-             // We need to agree on difficulty. Default to Medium for Challenge?
-             network.send({ type: 'START', difficulty: 'medium' });
-             startGameChallenge('medium');
-        }, 1000);
+        if (isHost) {
+            setTimeout(() => {
+                network.send({ type: 'START', difficulty: challengeDifficulty });
+                startGameChallenge(challengeDifficulty);
+            }, 1000);
+        }
     });
 
     network.on('onData', (data) => {
         if (data.type === 'START') {
+            // Guest receives start command with difficulty
             startGameChallenge(data.difficulty || 'medium');
         } else if (data.type === 'UPDATE') {
             ui.updateOpponentStatus(null, data.level, game.level < data.level);
@@ -185,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     elements.hostGameBtn.addEventListener('click', async () => {
+        isHost = true;
         const btn = elements.hostGameBtn;
         const originalText = btn.textContent;
         btn.disabled = true;
@@ -218,6 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
     elements.cancelHostBtn.addEventListener('click', () => {
         network.close();
         ui.showChallengeMenu();
+        isHost = false;
     });
 
     elements.joinGameBtn.addEventListener('click', () => {
@@ -301,6 +316,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function connectToHost(peerId) {
+        isHost = false;
         try {
             ui.showLobbyScreen();
             elements.qrCanvas.style.display = 'none'; // Hide QR in joining lobby
@@ -721,6 +737,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const targetId = e.target.dataset.id;
             const btn = e.target;
             
+            isHost = true;
             const originalText = btn.textContent;
             btn.textContent = 'Sending...';
             btn.disabled = true;
@@ -754,6 +771,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const peerId = e.target.dataset.peer;
             const senderId = e.target.dataset.id;
             
+            isHost = false;
             ui.removeInvite(senderId); // Remove from list
 
             // Connect
