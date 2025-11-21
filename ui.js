@@ -198,6 +198,8 @@ export class UIController {
 
         // Reset submit button text before it appears
         this.elements.submitScoreBtn.textContent = 'To Submit';
+        // Reset retry button text
+        this.elements.restartBtn.textContent = 'Retry';
         
         this.gameOverButtonTimeout = setTimeout(() => {
             gameOverButtons.forEach(btn => btn.disabled = false);
@@ -206,6 +208,10 @@ export class UIController {
         this.levelFadeTimeout = setTimeout(() => {
             this.elements.levelDisplay.classList.add('hidden');
         }, 3000);
+    }
+
+    setRetryButtonText(text) {
+        this.elements.restartBtn.textContent = text;
     }
 
     updateScore(score) {

@@ -73,16 +73,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Restart
     elements.restartBtn.addEventListener('click', () => {
         ui.clearTimeouts();
-        game.reset();
-        ui.showGameScreen(game.mode);
-        // Default retry to solo logic
-        game.start(game.currentDifficulty, 'solo'); 
+        
+        if (game.mode === 'challenge') {
+            challengeManager.requestRetry();
+        } else {
+            game.reset();
+            ui.showGameScreen(game.mode);
+            // Default retry to solo logic
+            game.start(game.currentDifficulty, 'solo'); 
+        }
     });
 
     // Home
     elements.homeBtn.addEventListener('click', () => {
         ui.clearTimeouts();
         game.reset();
+        
+        if (game.mode === 'challenge') {
+            challengeManager.disconnect();
+        }
+        
         ui.showStartMenu();
     });
 

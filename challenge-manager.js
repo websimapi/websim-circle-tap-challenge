@@ -13,6 +13,11 @@ export class ChallengeManager {
         this.currentUser = null;
         this.scanner = null;
 
+        // Retry state
+        this.myRetryRequested = false;
+        this.opponentRetryRequested = false;
+        this.intentionalDisconnect = false;
+
         this.bindEvents();
         this.setupNetwork();
         this.startPeerRefresh();
@@ -55,6 +60,10 @@ export class ChallengeManager {
             console.log("Connected to peer!");
             this.elements.connectionStatus.textContent = "Opponent Connected!";
             this.stopScanning(); // If we were scanning
+            
+            // Reset retry state
+            this.myRetryRequested = false;
+            this.opponentRetryRequested = false;
 
             if (this.isHost) {
                 setTimeout(() => {
@@ -80,13 +89,26 @@ export class ChallengeManager {
                 }
             } else if (data.type === 'HELLO') {
                 this.ui.updateOpponentStatus(data.username, 1, false);
+            } else if (data.type === 'RETRY') {
+                this.opponentRetryRequested = true;
+                if (!this.myRetryRequested) {
+                     this.ui.setRetryButtonText("Opponent wants to retry!");
+                }
+                this.checkRetryState();
             }
         });
 
         network.on('onDisconnect', () => {
-            if (this.game.mode === 'challenge' && this.game.gameState === 'playing') {
-                alert("Opponent disconnected.");
-                this.game.gameOver();
+            if (this.intentionalDisconnect) {
+                this.intentionalDisconnect = false;
+                return;
+            }
+
+            if (this.game.mode === 'challenge') {
+                 alert("Opponent disconnected.");
+                 if (this.game.gameState === 'playing') {
+                    this.game.gameOver();
+                 }
             }
             this.ui.showStartMenu();
         });
@@ -120,6 +142,10 @@ export class ChallengeManager {
     }
 
     startGame(difficulty) {
+        // Reset retry flags
+        this.myRetryRequested = false;
+        this.opponentRetryRequested = false;
+
         this.game.start(difficulty, 'challenge');
         this.ui.showGameScreen('challenge');
         this.sendUpdate();
@@ -127,6 +153,27 @@ export class ChallengeManager {
 
     openMenu() {
         this.ui.showChallengeMenu();
+    }
+    
+    disconnect() {
+        this.intentionalDisconnect = true;
+        network.close();
+        this.isHost = false;
+        this.myRetryRequested = false;
+        this.opponentRetryRequested = false;
+    }
+
+    requestRetry() {
+        this.myRetryRequested = true;
+        this.ui.setRetryButtonText("Waiting...");
+        network.send({ type: 'RETRY' });
+        this.checkRetryState();
+    }
+
+    checkRetryState() {
+        if (this.myRetryRequested && this.opponentRetryRequested) {
+            this.startGame(this.challengeDifficulty);
+        }
     }
 
     async handleHostClick() {
