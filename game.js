@@ -289,17 +289,27 @@ export class Game {
         const deltaTime = (currentTime - this.lastFrameTime) / 1000;
         this.lastFrameTime = currentTime;
 
-        // Challenge Mode Drain Logic
-        if (this.mode === 'challenge' && this.level < this.opponentLevel) {
-            // Drain lives
-            this.lives -= this.drainRate * deltaTime;
-            if (this.lives <= 0) {
-                this.lives = 0;
-                this.gameOver();
+        // Challenge Mode Drain/Regen Logic
+        if (this.mode === 'challenge') {
+            if (this.level < this.opponentLevel) {
+                // Drain lives
+                this.lives -= this.drainRate * deltaTime;
+                if (this.lives <= 0) {
+                    this.lives = 0;
+                    this.gameOver();
+                    if (this.onLivesUpdate) this.onLivesUpdate(this.lives);
+                    return;
+                }
                 if (this.onLivesUpdate) this.onLivesUpdate(this.lives);
-                return;
+            } else if (this.level > this.opponentLevel) {
+                // Regen lives
+                const regenRate = this.drainRate * 0.25;
+                if (this.lives < 3.0) {
+                    this.lives += regenRate * deltaTime;
+                    if (this.lives > 3.0) this.lives = 3.0;
+                    if (this.onLivesUpdate) this.onLivesUpdate(this.lives);
+                }
             }
-            if (this.onLivesUpdate) this.onLivesUpdate(this.lives);
         }
         
         if (this.mode === 'challenge' && this.onChallengeUpdate) {
